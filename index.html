@@ -17,12 +17,14 @@
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--display);margin:0}
-.wrap{max-width:1320px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:36px}
+html,body{overflow-x:hidden}
+.wrap{max-width:1320px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:36px}
+.wrap>*{min-width:0}
 .slate{display:grid;gap:14px;border-bottom:1px solid var(--line);padding-bottom:24px}
 .slate .eyebrow{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--tape);display:flex;gap:10px;align-items:center}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--rec);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:.15}}
-h1{font-size:clamp(40px,8vw,92px);font-weight:900;font-stretch:125%;line-height:.9;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:clamp(30px,8vw,92px);overflow-wrap:anywhere;font-weight:900;font-stretch:125%;line-height:.9;margin:0;letter-spacing:-.02em;text-wrap:balance}
 h1 em{font-style:normal;font-stretch:62%;font-weight:500;color:var(--dim)}
 .counts{display:flex;flex-wrap:wrap;gap:8px 28px;font:500 13px var(--mono);color:var(--dim)}
 .counts b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums;font-size:22px;display:block;font-family:var(--display);font-stretch:110%}
@@ -46,8 +48,9 @@ input,select{font:13px var(--mono);background:var(--panel);color:var(--fg);borde
 .card:hover{border-color:var(--dim)}
 .thumb{position:relative;aspect-ratio:4/5;background:#000}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.tc{position:absolute;left:8px;top:8px;font:500 11px var(--mono);background:rgba(0,0,0,.65);color:var(--tape);padding:2px 6px;border-radius:3px}
-.st{position:absolute;right:8px;top:8px;font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.65)}
+.labels{position:absolute;inset:8px 8px auto 8px;display:flex;flex-wrap:wrap;gap:4px;justify-content:space-between;pointer-events:none}
+.tc{font:500 11px var(--mono);background:rgba(0,0,0,.72);color:var(--tape);padding:2px 6px;border-radius:3px;max-width:100%;overflow-wrap:anywhere}
+.st{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.72);max-width:100%}
 .st.template{color:var(--ok)} .st.studied{color:var(--cool)} .st.queued{color:var(--dim)}
 .body{padding:10px 12px 12px;display:grid;gap:6px;align-content:start;min-width:0}
 .body .slug{font:500 12px var(--mono);color:var(--dim);overflow-wrap:anywhere}
@@ -67,7 +70,22 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 .study{font:12.5px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:14px;max-height:52vh;overflow:auto;grid-column:1/-1;margin:0}
 .close{position:sticky;top:0;float:right;margin:10px 10px 0 0;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;font:13px var(--mono);padding:6px 10px;cursor:pointer}
 a{color:var(--cool)}
-@media (max-width:640px){.dlg{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media (max-width:640px){
+  .dlg{grid-template-columns:1fr;padding:14px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .counts b{font-size:18px}
+  .tools{gap:8px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px}
+  .chip{flex:none}
+  select{flex:1 1 40%;min-width:0}
+  #q{flex:1 1 100%}
+  .body{padding:8px 9px 10px}
+  .body .style{font-size:13px}
+  .reel{grid-auto-columns:minmax(150px,44vw)}
+  .study{font-size:11.5px;max-height:none}
+  dialog{max-height:calc(100dvh - 24px)}
+}
 @media (prefers-reduced-motion:reduce){.dot{animation:none}}
 </style>
 </head>
@@ -113,7 +131,7 @@ let DATA={templates:[],renders:[]},STUDY={},state={fam:"",stage:"",engine:"",q:"
 try{const s=JSON.parse(localStorage.getItem("amvgal")||"{}");Object.assign(state,s)}catch(e){}
 const save=()=>{try{localStorage.setItem("amvgal",JSON.stringify(state))}catch(e){}};
 const grp=r=>r.ref.replace(/\d+$/,"")[0];
-const stageLabel={template:"template · belum render",studied:"distudi",queued:"antre studi"};
+const stageLabel={template:"belum render",studied:"distudi",queued:"antre studi"};
 const renderEngines=()=>new Set(DATA.renders.map(r=>r.engine));
 
 function counts(){
@@ -121,7 +139,7 @@ function counts(){
   const n=(f)=>t.filter(f).length;
   $("#counts").innerHTML=[
     [t.length,"ref total"],[n(r=>r.stage==="template"),"template jadi"],[n(r=>r.dedicated),"dedicated"],
-    [n(r=>r.smoke==="ok"),"lolos smoke test"],[0,"template udah dirender"],[n(r=>r.stage!=="template"),"ref baru (parallax/anime/keyflow)"],[DATA.renders.length,"video render"]
+    [n(r=>r.smoke==="ok"),"lolos smoke test"],[DATA.renders.filter(r=>r.kind==="template").length,"template dirender"],[n(r=>r.stage!=="template"),"ref baru"],[DATA.renders.filter(r=>r.kind!=="template").length,"render engine lama"]
   ].map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join("");
 }
 function reel(){
@@ -151,7 +169,7 @@ function grid(){
   const rows=filtered(),re=renderEngines();
   $("#shown").textContent=`${rows.length} tampil`;
   $("#grid").innerHTML=rows.length?rows.map((r,i)=>`<button class="card" data-i="${DATA.templates.indexOf(r)}">
-    <div class="thumb">${r.thumb?`<img src="${r.thumb}" alt="" loading="lazy">`:""}<span class="tc">REF ${esc(r.ref.toUpperCase())} · frame ref</span><span class="st ${r.stage}">${stageLabel[r.stage]}</span></div>
+    <div class="thumb">${r.thumb?`<img src="${r.thumb}" alt="" loading="lazy">`:""}<div class="labels"><span class="tc">REF ${esc(r.ref.toUpperCase())}</span><span class="st ${r.stage}">${stageLabel[r.stage]}</span></div></div>
     <div class="body"><div class="style">${esc(r.style)}</div><div class="slug">${esc(r.slug)}</div>
       ${r.colors.length?`<div class="sw">${r.colors.map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</div>`:""}
       <div class="tags"><span class="tag">${esc(r.engine)}</span>${r.dedicated?`<span class="tag">dedicated</span>`:""}${r.smoke==="ok"?`<span class="tag">smoke ok</span>`:""}${re.has(r.engine)?`<span class="tag rec">● ada render engine</span>`:""}</div></div></button>`).join("")
