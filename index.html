@@ -58,6 +58,8 @@ input,select{font:13px var(--mono);background:var(--panel);color:var(--fg);borde
 .sw{display:flex;gap:3px}.sw i{width:16px;height:6px;border-radius:1px;display:block}
 .tags{display:flex;flex-wrap:wrap;gap:4px}
 .tag{font:11px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:3px;padding:0 5px}
+.tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+.st.rendered{color:var(--ok);background:rgba(0,0,0,.85)}
 .tag.rec{color:var(--rec);border-color:color-mix(in srgb,var(--rec) 40%,transparent)}
 .empty{color:var(--dim);font:13px var(--mono);padding:40px 0;text-align:center}
 dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:0;width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px)}
@@ -99,8 +101,8 @@ a{color:var(--cool)}
   </header>
 
   <section aria-labelledby="reel-h">
-    <h2 id="reel-h"><span>Hasil render · engine family lama</span> klik video buat play pakai suara</h2>
-    <p style="margin:-6px 0 14px;color:var(--dim);max-width:70ch">Video ini dibikin dari engine family sebelum template per-ref ada. Render dari template per-ref bakal masuk sini begitu selesai.</p>
+    <h2 id="reel-h"><span>Hasil render</span> klik video buat play pakai suara</h2>
+    <p style="margin:-6px 0 14px;color:var(--dim);max-width:70ch">Label hijau "template" artinya video dirender dari template per-ref. Label abu "engine lama" dibikin dari engine family sebelum template per-ref ada.</p>
     <div class="reel" id="reel"></div>
   </section>
 
@@ -145,7 +147,7 @@ function counts(){
 function reel(){
   $("#reel").innerHTML=DATA.renders.map(r=>`<figure>
     <video src="${r.video}" poster="${r.poster}" muted loop playsinline preload="none" aria-label="${esc(r.slug)}"></video>
-    <figcaption><strong>${esc(r.artist)} · ${esc(r.engine)}</strong>${esc(r.slug)} · ${esc(r.note)}</figcaption></figure>`).join("");
+    <figcaption><span class="tag ${r.kind==="template"?"ok":""}" style="justify-self:start;margin-bottom:2px">${r.kind==="template"?"template":"engine lama"}</span><strong>${esc(r.artist)} · ${esc(r.engine)}</strong>${esc(r.slug)}${r.link?` · <a href="${esc(r.link)}" target="_blank" rel="noopener">full HD</a>`:""}</figcaption></figure>`).join("");
   document.querySelectorAll("#reel video").forEach(v=>{
     v.addEventListener("mouseenter",()=>{if(v.muted)v.play().catch(()=>{})});
     v.addEventListener("mouseleave",()=>{if(v.muted)v.pause()});
@@ -169,20 +171,22 @@ function grid(){
   const rows=filtered(),re=renderEngines();
   $("#shown").textContent=`${rows.length} tampil`;
   $("#grid").innerHTML=rows.length?rows.map((r,i)=>`<button class="card" data-i="${DATA.templates.indexOf(r)}">
-    <div class="thumb">${r.thumb?`<img src="${r.thumb}" alt="" loading="lazy">`:""}<div class="labels"><span class="tc">REF ${esc(r.ref.toUpperCase())}</span><span class="st ${r.stage}">${stageLabel[r.stage]}</span></div></div>
+    <div class="thumb">${r.thumb?`<img src="${r.thumb}" alt="" loading="lazy">`:""}<div class="labels"><span class="tc">REF ${esc(r.ref.toUpperCase())}</span>${r.rendered?`<span class="st rendered">● udah render</span>`:`<span class="st ${r.stage}">${stageLabel[r.stage]}</span>`}</div></div>
     <div class="body"><div class="style">${esc(r.style)}</div><div class="slug">${esc(r.slug)}</div>
       ${r.colors.length?`<div class="sw">${r.colors.map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</div>`:""}
       <div class="tags"><span class="tag">${esc(r.engine)}</span>${r.dedicated?`<span class="tag">dedicated</span>`:""}${r.smoke==="ok"?`<span class="tag">smoke ok</span>`:""}${re.has(r.engine)?`<span class="tag rec">● ada render engine</span>`:""}</div></div></button>`).join("")
     :`<div class="empty">Gak ada yang cocok. Coba hapus filter atau kata kunci.</div>`;
 }
 function open(i){
-  const r=DATA.templates[i],st=STUDY[r.ref],rend=DATA.renders.find(x=>x.engine===r.engine);
+  const r=DATA.templates[i],st=STUDY[r.ref];
+  const own=DATA.renders.find(x=>x.kind==="template"&&x.slug===r.slug);
+  const rend=own||DATA.renders.find(x=>x.kind!=="template"&&x.engine===r.engine);
   $("#dlg-body").innerHTML=`<div>${r.thumb?`<img src="${r.thumb}" alt="Frame dari ref ${esc(r.ref)}">`:""}</div>
    <div class="meta"><span class="tc" style="position:static;justify-self:start">${esc(r.ref.toUpperCase())} · ${stageLabel[r.stage]}</span>
    <h3 id="dlg-title">${esc(r.style)}</h3><div class="slug" style="font:12px var(--mono);color:var(--dim)">${esc(r.slug)} · engine ${esc(r.engine)}</div>
    ${r.novelty?`<p>${esc(r.novelty)}</p>`:""}
    ${r.link?`<p>Video ref: <a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a></p>`:""}
-   ${rend?`<div><div style="font:12px var(--mono);color:var(--dim);margin-bottom:6px">Contoh render engine ${esc(r.engine)}</div><video src="${rend.video}" poster="${rend.poster}" controls playsinline preload="none" style="max-width:200px"></video></div>`:""}</div>
+   ${rend?`<div><div style="font:12px var(--mono);color:var(--dim);margin-bottom:6px">${own?"Hasil render template ini":"Contoh render engine lama "+esc(r.engine)}</div><video src="${rend.video}" poster="${rend.poster}" controls playsinline preload="none" style="max-width:200px"></video></div>`:""}</div>
    ${st?`<pre class="study">${esc(st)}</pre>`:`<p style="grid-column:1/-1">Catatan studi buat ref ini belum ada, masih antre.</p>`}`;
   $("#dlg").showModal();
 }
