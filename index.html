@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AMV Template Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an edit-bay contact sheet — slate strip, render reel, then a filterable sheet of ref frames. Single dark look by choice. */
+:root{
+  --bg:#111215; --panel:#1a1b20; --line:#2a2c33; --fg:#ece9e2; --dim:#9a988f;
+  --tape:#f5b83d; --rec:#ff4d4d; --ok:#5fd08a; --cool:#7fb2ff;
+  --display:"Archivo",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--display);margin:0}
+.wrap{max-width:1320px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:36px}
+.slate{display:grid;gap:14px;border-bottom:1px solid var(--line);padding-bottom:24px}
+.slate .eyebrow{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--tape);display:flex;gap:10px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--rec);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+h1{font-size:clamp(40px,8vw,92px);font-weight:900;font-stretch:125%;line-height:.9;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 em{font-style:normal;font-stretch:62%;font-weight:500;color:var(--dim)}
+.counts{display:flex;flex-wrap:wrap;gap:8px 28px;font:500 13px var(--mono);color:var(--dim)}
+.counts b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums;font-size:22px;display:block;font-family:var(--display);font-stretch:110%}
+h2{font-size:13px;font-family:var(--mono);font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h2 span{color:var(--fg)}
+.reel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,210px);gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
+.reel figure{margin:0;scroll-snap-align:start;display:grid;gap:6px}
+.reel video{width:100%;aspect-ratio:9/16;object-fit:cover;background:#000;border-radius:6px;border:1px solid var(--line);display:block}
+.reel figcaption{font:12px var(--mono);color:var(--dim);display:grid}
+.reel figcaption strong{color:var(--fg);font:600 14px var(--display)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px var(--mono);border:1px solid var(--line);background:transparent;color:var(--dim);padding:6px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--tape);color:#1a1405;border-color:var(--tape)}
+.chip:focus-visible,input:focus-visible,select:focus-visible,.card:focus-visible,button:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+input,select{font:13px var(--mono);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+#q{flex:1 1 200px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;display:grid;grid-template-rows:auto 1fr;text-align:left;color:inherit;font:inherit;padding:0}
+.card:hover{border-color:var(--dim)}
+.thumb{position:relative;aspect-ratio:4/5;background:#000}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.tc{position:absolute;left:8px;top:8px;font:500 11px var(--mono);background:rgba(0,0,0,.65);color:var(--tape);padding:2px 6px;border-radius:3px}
+.st{position:absolute;right:8px;top:8px;font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.65)}
+.st.template{color:var(--ok)} .st.studied{color:var(--cool)} .st.queued{color:var(--dim)}
+.body{padding:10px 12px 12px;display:grid;gap:6px;align-content:start;min-width:0}
+.body .slug{font:500 12px var(--mono);color:var(--dim);overflow-wrap:anywhere}
+.body .style{font-weight:650;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.sw{display:flex;gap:3px}.sw i{width:16px;height:6px;border-radius:1px;display:block}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font:11px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:3px;padding:0 5px}
+.tag.rec{color:var(--rec);border-color:color-mix(in srgb,var(--rec) 40%,transparent)}
+.empty{color:var(--dim);font:13px var(--mono);padding:40px 0;text-align:center}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:0;width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px)}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.dlg{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:20px;padding:20px}
+.dlg img,.dlg video{width:100%;border-radius:6px;display:block}
+.dlg h3{margin:0;font-size:24px;font-stretch:115%;font-weight:800;line-height:1.1;text-wrap:balance}
+.dlg .meta{display:grid;gap:10px;align-content:start;min-width:0}
+.dlg p{margin:0;color:var(--dim);max-width:65ch}
+.study{font:12.5px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:14px;max-height:52vh;overflow:auto;grid-column:1/-1;margin:0}
+.close{position:sticky;top:0;float:right;margin:10px 10px 0 0;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;font:13px var(--mono);padding:6px 10px;cursor:pointer}
+a{color:var(--cool)}
+@media (max-width:640px){.dlg{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="slate">
+    <div class="eyebrow"><span class="dot"></span> REC · amvkit · edit bay</div>
+    <h1>AMV Template Studio <em>/ ref → template</em></h1>
+    <div class="counts" id="counts"></div>
+  </header>
+
+  <section aria-labelledby="reel-h">
+    <h2 id="reel-h"><span>Hasil render · engine family lama</span> klik video buat play pakai suara</h2>
+    <p style="margin:-6px 0 14px;color:var(--dim);max-width:70ch">Video ini dibikin dari engine family sebelum template per-ref ada. Render dari template per-ref bakal masuk sini begitu selesai.</p>
+    <div class="reel" id="reel"></div>
+  </section>
+
+  <section aria-labelledby="sheet-h">
+    <h2 id="sheet-h"><span>Template &amp; ref</span> <span id="shown" style="color:var(--dim)"></span></h2>
+    <div class="tools">
+      <div class="chips" id="fam" role="group" aria-label="Kelompok ref"></div>
+      <select id="stage" aria-label="Status">
+        <option value="">Semua status</option>
+        <option value="template">Template jadi</option>
+        <option value="studied">Udah distudi</option>
+        <option value="queued">Antre studi</option>
+      </select>
+      <select id="engine" aria-label="Engine"><option value="">Semua engine</option></select>
+      <input id="q" type="search" placeholder="Cari style, slug, ref…" aria-label="Cari">
+    </div>
+    <div class="grid" id="grid" style="margin-top:16px"></div>
+  </section>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title"><button class="close" id="dlg-close">Tutup</button><div class="dlg" id="dlg-body"></div></dialog>
+
+<script>
+const GROUPS={q:"Social/UI",s:"Scrapbook",t:"TikTok mix",x:"Mograph",r:"Early",p:"3D parallax",a:"Anime peak",k:"Keyflow"};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let DATA={templates:[],renders:[]},STUDY={},state={fam:"",stage:"",engine:"",q:""};
+try{const s=JSON.parse(localStorage.getItem("amvgal")||"{}");Object.assign(state,s)}catch(e){}
+const save=()=>{try{localStorage.setItem("amvgal",JSON.stringify(state))}catch(e){}};
+const grp=r=>r.ref.replace(/\d+$/,"")[0];
+const stageLabel={template:"template · belum render",studied:"distudi",queued:"antre studi"};
+const renderEngines=()=>new Set(DATA.renders.map(r=>r.engine));
+
+function counts(){
+  const t=DATA.templates;
+  const n=(f)=>t.filter(f).length;
+  $("#counts").innerHTML=[
+    [t.length,"ref total"],[n(r=>r.stage==="template"),"template jadi"],[n(r=>r.dedicated),"dedicated"],
+    [n(r=>r.smoke==="ok"),"lolos smoke test"],[0,"template udah dirender"],[n(r=>r.stage!=="template"),"ref baru (parallax/anime/keyflow)"],[DATA.renders.length,"video render"]
+  ].map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join("");
+}
+function reel(){
+  $("#reel").innerHTML=DATA.renders.map(r=>`<figure>
+    <video src="${r.video}" poster="${r.poster}" muted loop playsinline preload="none" aria-label="${esc(r.slug)}"></video>
+    <figcaption><strong>${esc(r.artist)} · ${esc(r.engine)}</strong>${esc(r.slug)} · ${esc(r.note)}</figcaption></figure>`).join("");
+  document.querySelectorAll("#reel video").forEach(v=>{
+    v.addEventListener("mouseenter",()=>{if(v.muted)v.play().catch(()=>{})});
+    v.addEventListener("mouseleave",()=>{if(v.muted)v.pause()});
+    v.addEventListener("click",()=>{document.querySelectorAll("#reel video").forEach(o=>{if(o!==v){o.pause();o.muted=true;o.controls=false}});v.muted=false;v.controls=true;v.play().catch(()=>{})});
+  });
+}
+function controls(){
+  const fams=[...new Set(DATA.templates.map(grp))];
+  $("#fam").innerHTML=[["","Semua"],...fams.map(f=>[f,GROUPS[f]||f])].map(([k,l])=>`<button class="chip" data-f="${k}" aria-pressed="${state.fam===k}">${l} <span>${k?DATA.templates.filter(r=>grp(r)===k).length:DATA.templates.length}</span></button>`).join("");
+  $("#fam").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;state.fam=b.dataset.f;save();controls();grid()};
+  const eng=[...new Set(DATA.templates.map(r=>r.engine))].sort();
+  $("#engine").innerHTML=`<option value="">Semua engine</option>`+eng.map(e=>`<option ${state.engine===e?"selected":""}>${esc(e)}</option>`).join("");
+  $("#stage").value=state.stage;$("#q").value=state.q;
+}
+function filtered(){
+  const q=state.q.trim().toLowerCase();
+  return DATA.templates.filter(r=>(!state.fam||grp(r)===state.fam)&&(!state.stage||r.stage===state.stage)&&(!state.engine||r.engine===state.engine)
+    &&(!q||[r.slug,r.ref,r.style,r.engine,r.novelty].join(" ").toLowerCase().includes(q)));
+}
+function grid(){
+  const rows=filtered(),re=renderEngines();
+  $("#shown").textContent=`${rows.length} tampil`;
+  $("#grid").innerHTML=rows.length?rows.map((r,i)=>`<button class="card" data-i="${DATA.templates.indexOf(r)}">
+    <div class="thumb">${r.thumb?`<img src="${r.thumb}" alt="" loading="lazy">`:""}<span class="tc">REF ${esc(r.ref.toUpperCase())} · frame ref</span><span class="st ${r.stage}">${stageLabel[r.stage]}</span></div>
+    <div class="body"><div class="style">${esc(r.style)}</div><div class="slug">${esc(r.slug)}</div>
+      ${r.colors.length?`<div class="sw">${r.colors.map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</div>`:""}
+      <div class="tags"><span class="tag">${esc(r.engine)}</span>${r.dedicated?`<span class="tag">dedicated</span>`:""}${r.smoke==="ok"?`<span class="tag">smoke ok</span>`:""}${re.has(r.engine)?`<span class="tag rec">● ada render engine</span>`:""}</div></div></button>`).join("")
+    :`<div class="empty">Gak ada yang cocok. Coba hapus filter atau kata kunci.</div>`;
+}
+function open(i){
+  const r=DATA.templates[i],st=STUDY[r.ref],rend=DATA.renders.find(x=>x.engine===r.engine);
+  $("#dlg-body").innerHTML=`<div>${r.thumb?`<img src="${r.thumb}" alt="Frame dari ref ${esc(r.ref)}">`:""}</div>
+   <div class="meta"><span class="tc" style="position:static;justify-self:start">${esc(r.ref.toUpperCase())} · ${stageLabel[r.stage]}</span>
+   <h3 id="dlg-title">${esc(r.style)}</h3><div class="slug" style="font:12px var(--mono);color:var(--dim)">${esc(r.slug)} · engine ${esc(r.engine)}</div>
+   ${r.novelty?`<p>${esc(r.novelty)}</p>`:""}
+   ${r.link?`<p>Video ref: <a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a></p>`:""}
+   ${rend?`<div><div style="font:12px var(--mono);color:var(--dim);margin-bottom:6px">Contoh render engine ${esc(r.engine)}</div><video src="${rend.video}" poster="${rend.poster}" controls playsinline preload="none" style="max-width:200px"></video></div>`:""}</div>
+   ${st?`<pre class="study">${esc(st)}</pre>`:`<p style="grid-column:1/-1">Catatan studi buat ref ini belum ada, masih antre.</p>`}`;
+  $("#dlg").showModal();
+}
+$("#grid").onclick=e=>{const c=e.target.closest(".card");if(c)open(+c.dataset.i)};
+$("#dlg-close").onclick=()=>{$("#dlg").querySelectorAll("video").forEach(v=>v.pause());$("#dlg").close()};
+$("#dlg").addEventListener("close",()=>$("#dlg").querySelectorAll("video").forEach(v=>v.pause()));
+$("#stage").onchange=e=>{state.stage=e.target.value;save();grid()};
+$("#engine").onchange=e=>{state.engine=e.target.value;save();grid()};
+$("#q").oninput=e=>{state.q=e.target.value;save();grid()};
+
+fetch("data.json").then(r=>r.json()).then(d=>{DATA=d;counts();reel();controls();grid()})
+  .catch(()=>{$("#grid").innerHTML=`<div class="empty">Data gallery gagal dimuat. Refresh halaman.</div>`});
+fetch("studies.json").then(r=>r.json()).then(s=>STUDY=s).catch(()=>{});
+</script>
+</body>
+</html>
