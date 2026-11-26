@@ -3340,6 +3340,15 @@
    "poster": "renders/own-playdate.jpg"
   },
   {
+   "slug": "ref-q34",
+   "artist": "Zhou Ye",
+   "engine": "rebuild",
+   "note": "ref rebuild (latest revision)",
+   "kind": "rebuild",
+   "video": "renders/ref-q34.mp4",
+   "poster": "renders/ref-q34.jpg"
+  },
+  {
    "slug": "ref-q33",
    "artist": "Zhou Ye",
    "engine": "rebuild",
